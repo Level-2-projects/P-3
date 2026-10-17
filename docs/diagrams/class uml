@@ -1,0 +1,421 @@
+# Class diagrams (domain model)
+
+Three diagrams, split like the ER diagrams in SAD 6.3. Attribute names are the column names of the table catalogue (SAD 6.4). Only the key attributes are drawn. Types are shown where the attribute is an enumeration, and the values are in the tables under each diagram. Fields that end in `_enc` are encrypted at field level.
+
+Where the ER diagram and the table catalogue differ, these diagrams follow the table catalogue: a user and a blood center are optional on the other side (`center_id` and `institution_id` are nullable), and a storage temperature log belongs to a center (`center_id`), not to a unit.
+
+## 1. Tenancy, donors and units
+
+```mermaid
+classDiagram
+  direction LR
+  class Institution {
+    +id
+    +name
+    +InstitutionKind kind
+    +governorate
+    +status
+  }
+  class BloodCenter {
+    +id
+    +name
+    +CenterType type
+    +institution_id
+    +lat
+    +lng
+    +status
+  }
+  class CenterLicense {
+    +center_id
+    +LicenseActivity activity
+    +license_no
+    +valid_from
+    +valid_to
+    +verified_by
+  }
+  class User {
+    +id
+    +institution_id
+    +center_id
+    +Role role
+    +email
+    +professional_license_no
+    +status
+    +locked_until
+  }
+  class Donor {
+    +id
+    +center_id
+    +donor_card_no
+    +full_name_enc
+    +national_id_enc
+    +phone_enc
+    +birth_date
+    +sex
+  }
+  class DonorRegistry {
+    +registry_no
+    +id_idx
+    +Fitness fitness
+    +deferred_until
+    +last_donation_at
+    +last_center_id
+  }
+  class Visit {
+    +id
+    +donor_id
+    +center_id
+    +visit_at
+    +VisitStatus status
+  }
+  class Consent {
+    +id
+    +visit_id
+    +ConsentType type
+    +form_version
+    +signed_at
+    +recorded_by
+  }
+  class Assessment {
+    +id
+    +visit_id
+    +answers
+    +systolic
+    +diastolic
+    +pulse
+    +hb_g_dl
+    +weight_kg
+    +rule_results
+    +policy_version_id
+    +decision
+    +decided_by
+  }
+  class Donation {
+    +id
+    +visit_id
+    +collected_at
+    +collected_by
+    +responsible_physician_id
+    +bag_type
+    +anticoagulant_solution
+    +lot_no
+  }
+  class BloodUnit {
+    +id
+    +donation_id
+    +unit_number
+    +label_code
+    +component_type
+    +abo
+    +rh
+    +UnitStatus status
+    +expiry_at
+    +center_id
+    +version
+    +expiry_exception
+    +transition_unit(to_status, actor_id, reason_code, expected_version)
+  }
+  class UnitEvent {
+    +id
+    +unit_id
+    +event_type
+    +from_status
+    +to_status
+    +actor_id
+    +event_at
+    +recorded_at
+    +late_entry
+    +reason_code
+  }
+  class PolicyVersion {
+    +id
+    +version_no
+    +PolicyStatus status
+    +created_by
+    +approved_by
+    +effective_from
+  }
+  class PolicyParameter {
+    +policy_version_id
+    +code
+    +applies_to
+    +value
+    +unit
+    +min_hard
+    +max_hard
+    +tighten
+    +verification_status
+  }
+  Institution "1" --> "0..*" User : employs
+  Institution "0..1" --> "0..*" BloodCenter : may operate
+  BloodCenter "0..1" --> "0..*" User : staff at
+  BloodCenter "1" *-- "0..*" CenterLicense : holds
+  BloodCenter "1" --> "0..*" Visit : hosts
+  BloodCenter "1" --> "0..*" BloodUnit : custody
+  Donor "1" --> "0..*" Visit : makes
+  Donor "0..*" --> "1" DonorRegistry : summarised in
+  Visit "1" *-- "0..*" Consent : has
+  Visit "1" *-- "1" Assessment : has
+  Visit "1" --> "0..1" Donation : produces
+  Donation "1" --> "1" BloodUnit : yields
+  BloodUnit "0..1" --> "0..*" BloodUnit : parent of
+  BloodUnit "1" *-- "0..*" UnitEvent : logs
+  PolicyVersion "1" *-- "0..*" PolicyParameter : contains
+  PolicyVersion "1" --> "0..*" Assessment : applied in
+```
+
+| Enumeration | Values |
+|---|---|
+| `InstitutionKind` | `hospital`, `university`, `health_body` |
+| `CenterType` | `collection`, `storage` |
+| `LicenseActivity` | `collect`, `test`, `store`, `issue` |
+| `Role` | `treating_doctor`, `center_physician`, `blood_bank_manager`, `lab_tech`, `reception_nurse`, `facility_admin`, `system_admin` |
+| `Fitness` | `fit`, `deferred_temp`, `deferred_perm` |
+| `VisitStatus` | `registered`, `consented`, `screening`, `deferred`, `accepted`, `collected`, `closed`, `abandoned` |
+| `ConsentType` | `donation`, `testing_notification` |
+| `UnitStatus` | `Quarantined`, `Released`, `Blocked`, `Reserved`, `Issued`, `InTransit`, `Returned`, `Received`, `Expired`, `Recalled`, `Discarded` |
+| `PolicyStatus` | `draft`, `pending`, `active`, `retired` |
+
+## 2. Testing and release
+
+```mermaid
+classDiagram
+  direction LR
+  class BloodUnit {
+    +id
+    +unit_number
+    +UnitStatus status
+  }
+  class BloodCenter {
+    +id
+    +name
+  }
+  class LabTestOrder {
+    +id
+    +unit_id
+    +test_code
+    +status
+  }
+  class LabSample {
+    +id
+    +unit_id
+    +sample_type
+    +collected_at
+    +received_at
+    +received_by
+  }
+  class LabResult {
+    +id
+    +order_id
+    +ResultStatus result_status
+    +value
+    +performed_by
+    +performed_at
+    +supersedes_id
+    +retest_round
+    +reason
+  }
+  class LabResultReview {
+    +id
+    +result_id
+    +reviewer_id
+    +decision
+    +reviewed_at
+    +note
+  }
+  class ResultApproval {
+    +id
+    +unit_id
+    +approved_by
+    +approved_at
+    +results_hash
+  }
+  class ReleaseDecision {
+    +id
+    +unit_id
+    +ReleaseDecisionKind decision
+    +decided_by
+    +reason_code
+    +policy_version_id
+  }
+  class StorageTemperatureLog {
+    +id
+    +center_id
+    +device_label
+    +recorded_at
+    +value_c
+    +recorded_by
+    +deviation
+    +action_taken
+  }
+  BloodUnit "1" *-- "0..*" LabTestOrder : requires
+  BloodUnit "1" *-- "0..*" LabSample : has
+  LabTestOrder "1" *-- "0..*" LabResult : resolved by
+  LabResult "1" *-- "0..*" LabResultReview : reviewed in
+  LabResult "0..*" --> "0..1" LabResult : supersedes
+  BloodUnit "1" --> "0..*" ResultApproval : approved by
+  BloodUnit "1" --> "0..*" ReleaseDecision : decided in
+  BloodCenter "1" --> "0..*" StorageTemperatureLog : logs
+```
+
+| Enumeration | Values |
+|---|---|
+| `ResultStatus` | `negative`, `reactive`, `invalid`, `inconclusive`, `determined` (ABO/Rh typing only) |
+| `ReleaseDecisionKind` | `release`, `block`, `discard`, `retest_authorized` |
+
+Constraints the diagram cannot show: a reviewer is never the performer, the physician who approves entered no result for the unit, and a unit is released only through `transition_unit` after the release gate G1 to G9 (SAD 7.2).
+
+## 3. Requests and fulfilment
+
+```mermaid
+classDiagram
+  direction LR
+  class Institution {
+    +id
+    +name
+  }
+  class BloodCenter {
+    +id
+    +name
+  }
+  class BloodUnit {
+    +id
+    +unit_number
+    +UnitStatus status
+  }
+  class Patient {
+    +id
+    +institution_id
+    +patient_ref
+    +full_name_enc
+    +national_id_enc
+    +national_id_idx
+    +address_enc
+  }
+  class BloodRequest {
+    +id
+    +institution_id
+    +requested_by
+    +patient_id
+    +component_type
+    +abo
+    +rh
+    +qty_requested
+    +priority
+    +required_by
+    +RequestStatus status
+    +qty_approved
+    +qty_received
+    +PaperAuthorization paper_authorization
+    +parent_request_id
+  }
+  class RequestTarget {
+    +request_id
+    +center_id
+    +round_no
+    +notified_at
+    +responded_at
+  }
+  class Offer {
+    +id
+    +request_id
+    +center_id
+    +OfferStatus status
+    +qty_offered
+    +distance_km
+    +eta_minutes
+    +eta_is_estimate
+    +hold_until
+    +fulfillment_deadline
+  }
+  class ReservationItem {
+    +id
+    +offer_id
+    +unit_id
+    +active
+    +released_at
+    +release_reason
+  }
+  class PatientSample {
+    +id
+    +offer_id
+    +tube_type
+    +received_at
+    +label_verified
+    +status
+    +typed_abo
+    +typed_rh
+    +typed_by
+    +reviewed_by
+  }
+  class CrossmatchRecord {
+    +id
+    +reservation_item_id
+    +patient_sample_id
+    +method
+    +result
+    +performed_by
+    +reviewed_by
+  }
+  class Transfer {
+    +id
+    +offer_id
+    +from_center_id
+    +to_institution_id
+    +status
+    +dispatched_at
+    +received_at
+  }
+  class TransferItem {
+    +id
+    +transfer_id
+    +unit_id
+    +dispatched_condition
+    +received_condition
+    +discrepancy_reason
+  }
+  class Handover {
+    +id
+    +offer_id
+    +handed_over_at
+    +handed_over_by
+    +ReceiverType receiver_type
+    +id_checked
+  }
+  class FormIssuance {
+    +id
+    +form_type
+    +form_no
+    +entity_type
+    +entity_id
+    +generated_by
+    +generated_at
+    +content_hash
+  }
+  Institution "1" --> "0..*" Patient : registers
+  Patient "1" --> "0..*" BloodRequest : needs
+  BloodRequest "0..1" --> "0..*" BloodRequest : follow-up of
+  BloodRequest "1" *-- "0..*" RequestTarget : routed to
+  RequestTarget "0..*" --> "1" BloodCenter : center
+  BloodRequest "1" --> "0..*" Offer : receives
+  BloodCenter "1" --> "0..*" Offer : makes
+  Offer "1" *-- "0..*" ReservationItem : reserves
+  BloodUnit "1" --> "0..*" ReservationItem : reserved in
+  Offer "1" --> "0..*" PatientSample : tested with
+  ReservationItem "1" --> "0..1" CrossmatchRecord : checked
+  PatientSample "1" --> "0..*" CrossmatchRecord : used
+  Offer "1" --> "0..1" Transfer : ships
+  Transfer "1" *-- "0..*" TransferItem : contains
+  BloodUnit "1" --> "0..*" TransferItem : moves
+  Offer "1" --> "0..1" Handover : handed over in
+  Offer "1" --> "0..*" FormIssuance : prints
+```
+
+| Enumeration | Values |
+|---|---|
+| `RequestStatus` | `Open`, `Covered`, `InFulfilment`, `Completed`, `PartiallyCompleted`, `Unfulfilled`, `CancelRequested`, `Cancelled` |
+| `OfferStatus` | `offered`, `approved`, `expired`, `declined`, `released`, `sample_accepted`, `failed`, `matched`, `issued`, `dispatched`, `received`, `returned` |
+| `PaperAuthorization` | `pending`, `verified` |
+| `ReceiverType` | `courier`, `relative`, `hospital_staff` |
+
+Constraints the diagram cannot show: a unit has at most one active reservation (a partial unique index on `reservation_item`), request status is derived from its offers, and `parent_request_id` is set only when a request asks for the missing quantity of an earlier request of the same institution.
