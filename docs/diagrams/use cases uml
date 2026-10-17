@@ -1,0 +1,143 @@
+# Use case diagrams
+
+The actors are the roles of SAD section 3. Each use case carries the user story that covers it. `US-01` (log in) comes before every staff use case and is not drawn. `US-34` (shortage alert) is blocked until the SAD adds donor consent, a channel and a donor location, so it is not drawn either.
+
+Mermaid has no native use case notation. Actors are boxes, use cases are ovals, and the outer box is the system boundary. Dashed arrows are `«include»` and `«extend»`.
+
+## 1. Donor intake, testing and release
+
+```mermaid
+flowchart LR
+  RN["Reception nurse"]:::actor
+  CP["Center physician"]:::actor
+  LT["Lab technician"]:::actor
+  subgraph SYS["BloodNet"]
+    U1(["Register donor by national ID and phone<br/>US-07"]):::uc
+    U2(["Record consents<br/>US-08"]):::uc
+    U3(["Record measurements and check rules<br/>US-09"]):::uc
+    U4(["Decide donor eligibility<br/>US-10"]):::uc
+    U5(["Record collection and create the unit<br/>US-11"]):::uc
+    UR(["Check the donor registry (audited)"]):::uc
+    U6(["Enter lab results<br/>US-12"]):::uc
+    U7(["Review another technician's results<br/>US-13"]):::uc
+    U8(["Approve results and release the unit<br/>US-14"]):::uc
+    UG(["Run the release gate G1 to G9"]):::uc
+    U9(["Decide on a blocked unit<br/>US-15"]):::uc
+    U10(["Look up a unit<br/>US-16"]):::uc
+  end
+  RN --- U1
+  RN --- U2
+  RN --- U3
+  RN --- U5
+  CP --- U4
+  CP --- U8
+  CP --- U9
+  CP --- U10
+  LT --- U6
+  LT --- U7
+  LT --- U10
+  U1 -. "«include»" .-> UR
+  U5 -. "«include»" .-> UR
+  U8 -. "«include»" .-> UG
+  classDef actor fill:#ffffff,stroke:#b01f2d,stroke-width:2px,font-weight:bold
+  classDef uc fill:#fdf3f4,stroke:#b01f2d
+```
+
+## 2. Blood requests, stock and fulfilment
+
+```mermaid
+flowchart LR
+  TD["Treating doctor"]:::actor
+  BM["Blood bank manager"]:::actor
+  LT["Lab technician"]:::actor
+  CP["Center physician"]:::actor
+  WK["Worker (system)"]:::actor
+  subgraph SYS["BloodNet"]
+    V1(["Create a blood request<br/>US-20"]):::uc
+    V2(["Request the missing quantity<br/>US-29"]):::uc
+    V3(["Route the request to centers in rounds<br/>US-21"]):::uc
+    V4(["Answer a request and reserve units<br/>US-22"]):::uc
+    V5(["Compare and approve offers<br/>US-23"]):::uc
+    V6(["Verify the paper request and accept the patient sample<br/>US-24"]):::uc
+    V7(["Type the patient blood group<br/>US-24"]):::uc
+    V8(["Crossmatch<br/>US-25"]):::uc
+    V9(["Issue units and ship<br/>US-26"]):::uc
+    V10(["Check the issue conditions"]):::uc
+    V11(["Confirm receipt per unit<br/>US-27"]):::uc
+    V12(["Cancel a request<br/>US-28"]):::uc
+    V13(["Evaluate returned units<br/>US-30"]):::uc
+    V14(["View stock<br/>US-17"]):::uc
+    V15(["Remove expired units<br/>US-18"]):::uc
+    V16(["Log storage temperature<br/>US-19"]):::uc
+    V17(["Recall units of an earlier donation<br/>US-35"]):::uc
+  end
+  TD --- V1
+  TD --- V5
+  TD --- V11
+  TD --- V12
+  TD --- V2
+  WK --- V3
+  BM --- V4
+  BM --- V6
+  BM --- V9
+  BM --- V13
+  BM --- V14
+  BM --- V15
+  BM --- V16
+  BM --- V17
+  LT --- V7
+  LT --- V8
+  CP --- V13
+  CP --- V17
+  V1 -. "«include»" .-> V3
+  V2 -. "«extend»" .-> V1
+  V9 -. "«include»" .-> V10
+  classDef actor fill:#ffffff,stroke:#b01f2d,stroke-width:2px,font-weight:bold
+  classDef uc fill:#fdf3f4,stroke:#b01f2d
+```
+
+The issue conditions are a verified paper request, an accepted patient sample and a reviewed crossmatch (SAD invariant I11).
+
+## 3. Administration, content and assistants
+
+```mermaid
+flowchart LR
+  DN["Donor (public, no account)"]:::actor
+  SA["System admin"]:::actor
+  FA["Facility admin"]:::actor
+  TD["Treating doctor"]:::actor
+  BM["Blood bank manager"]:::actor
+  subgraph SYS["BloodNet"]
+    W1(["Find the nearest center<br/>US-33"]):::uc
+    W2(["Ask the donor chatbot<br/>US-31"]):::uc
+    W3(["Review chatbot content<br/>US-32"]):::uc
+    W4(["Manage institutions, centers and licenses<br/>US-02"]):::uc
+    W5(["Change a policy rule within the allowed range<br/>US-05"]):::uc
+    W6(["Approve the change (a second person)"]):::uc
+    W7(["View the audit log and unit history<br/>US-04"]):::uc
+    W8(["Manage staff accounts<br/>US-03"]):::uc
+    W9(["Ask the assistant to prepare a request form<br/>US-36"]):::uc
+    W10(["Ask the assistant about a request<br/>US-37"]):::uc
+    W11(["Ask the blood bank assistant<br/>US-38"]):::uc
+  end
+  DN --- W1
+  DN --- W2
+  SA --- W3
+  SA --- W4
+  SA --- W5
+  SA --- W7
+  SA --- W8
+  FA --- W8
+  TD --- W9
+  TD --- W10
+  BM --- W11
+  W5 -. "«include»" .-> W6
+  classDef actor fill:#ffffff,stroke:#b01f2d,stroke-width:2px,font-weight:bold
+  classDef uc fill:#fdf3f4,stroke:#b01f2d
+```
+
+Notes:
+
+- A facility admin manages only the staff of their own institution. A system admin manages any.
+- The three assistant use cases (US-36 to US-38) are read-only. The chatbot never writes. A card only opens a screen (SAD 5.7).
+- The content reviewer is never the content author, and the policy approver is never the policy author (SAD 11.2).
