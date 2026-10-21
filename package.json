@@ -1,0 +1,24 @@
+{
+  "name": "p-3",
+  "version": "1.0.0",
+  "description": "A web platform that connects **donors**, **blood centers** and **hospitals** around a single unit of blood: where to donate, how a unit is collected, tested and released, and how a hospital requests, compares offers and confirms receipt.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Level-2-projects/P-3.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Level-2-projects/P-3/issues"
+  },
+  "homepage": "https://github.com/Level-2-projects/P-3#readme"
+}
