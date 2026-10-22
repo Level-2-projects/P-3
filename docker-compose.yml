@@ -1,0 +1,21 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: bloodnet-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bloodnet
+      POSTGRES_USER: bloodnet
+      POSTGRES_PASSWORD: bloodnet
+    ports:
+      - "5432:5432"
+    volumes:
+      - bloodnet_pgdata:/var/lib/postgresql/data 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bloodnet -d bloodnet"] # Check if the database is ready
+      interval: 5s # Check every 5 seconds
+      timeout: 5s  # Timeout after 5 seconds
+      retries: 10  # Retry up to 10 times before considering the container unhealthy
+
+volumes:
+  bloodnet_pgdata:
