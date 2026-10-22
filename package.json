@@ -1,0 +1,14 @@
+{
+  "name": "p-3",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A web platform that connects donors, blood centers and hospitals...",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm --workspace=apps/web run dev",
+    "build:web": "npm --workspace=apps/web run build"
+  }
+}
