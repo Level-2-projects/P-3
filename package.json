@@ -20,5 +20,18 @@
   "bugs": {
     "url": "https://github.com/Level-2-projects/P-3/issues"
   },
-  "homepage": "https://github.com/Level-2-projects/P-3#readme"
+  "homepage": "https://github.com/Level-2-projects/P-3#readme",
+  "dependencies": {
+    "dotenv": "^18.0.8",
+    "drizzle-orm": "^0.45.4",
+    "express": "^5.3.0",
+    "postgres": "^3.4.9"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
 }
