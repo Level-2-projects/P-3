@@ -1,22 +1,29 @@
 {
   "name": "p-3",
   "version": "1.0.0",
-  "description": "A web platform that connects **donors**, **blood centers** and **hospitals** around a single unit of blood: where to donate, how a unit is collected, tested and released, and how a hospital requests, compares offers and confirms receipt.",
+  "private": true,
+  "description": "A web platform that connects donors, blood centers and hospitals...",
   "main": "index.js",
   "directories": {
     "doc": "docs"
   },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-       "dev": "tsx watch apps/api/src/server.ts",
+    "dev": "tsx watch apps/api/src/server.ts",
     "build": "tsc",
     "typecheck": "tsc --noEmit",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:check": "drizzle-kit check"
+    "db:check": "drizzle-kit check",
+    "dev:web": "npm --workspace=apps/web run dev",
+    "build:web": "npm --workspace=apps/web run build"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Level-2-projects/P-3.git"   
+    "url": "git+https://github.com/Level-2-projects/P-3.git"
   },
   "keywords": [],
   "author": "",
