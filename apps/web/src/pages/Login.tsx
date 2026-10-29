@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useMutation } from '@tanstack/react-query';
 import enMessages from '../../messages/en.json';
+import { login } from '../lib/api';
 
 export const Login: React.FC = () => {
   const { common, auth } = enMessages;
 
-  const [email, setEmail] = useState('ahmed.mamdouh@bloodnet.gov.eg');
-  const [password, setPassword] = useState('••••••••••••');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const loginMutation = useMutation({ mutationFn: login });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Connect to POST /api/v1/auth/login
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -178,14 +181,26 @@ export const Login: React.FC = () => {
                   <p className="text-[11px] text-[#7F1D1D] mt-0.5">{auth.lockoutMessage}</p>
                 </div>
               </div>
+              {loginMutation.isError && (
+                <p role="alert" className="text-sm text-[#991B1B]">
+                  {auth.signInError}
+                </p>
+              )}
+              {loginMutation.isSuccess && (
+                <p role="status" className="text-sm text-[#166534]">
+                  {auth.signInSuccess}
+                </p>
+              )}
 
               {/* Primary Sign In Button */}
               <div className="pt-1">
                 <button
                   type="submit"
+                  disabled={loginMutation.isPending || !email || !password}
+                  aria-busy={loginMutation.isPending}
                   className="group w-full h-12 flex items-center justify-center gap-2 rounded-lg bg-[#991b1b] hover:bg-[#7f1d1d] active:bg-[#681717] text-white text-sm font-bold tracking-wide shadow-sm hover:shadow transition-all focus:outline-none focus:ring-4 focus:ring-[#991b1b]/25"
                 >
-                  <span>{auth.signInButton}</span>
+                  <span>{loginMutation.isPending ? auth.signingIn : auth.signInButton}</span>
                   <span className="inline-flex items-center gap-0.5 text-[10px] font-mono font-normal uppercase bg-white/20 text-white px-1.5 py-0.5 rounded border border-white/20 group-hover:bg-white/30 transition-colors">
                     <span>{auth.enterKeyHint}</span>
                     <span className="text-xs">↵</span>

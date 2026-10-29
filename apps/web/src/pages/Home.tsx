@@ -1,44 +1,43 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import arMessages from '../../messages/ar.json';
-
-interface CenterItem {
-  id: string;
-  gov: string;
-  badge: string;
-  name: string;
-  address: string;
-  schedule: string;
-  extraInfo: string;
-  extraIcon: string;
-  isEmergency?: boolean;
-  lat: number;
-  lng: number;
-}
-
-// TODO: Replace with useQuery fetching GET /api/v1/public/centers once backend endpoint is ready
-const CENTERS_DATA: CenterItem[] = arMessages.mockData.centers;
-// TODO: Replace with useQuery fetching GET /api/v1/kb/published once backend endpoint is ready
-const ARTICLES_DATA = arMessages.mockData.articles;
+import { getCenters, getPublishedArticles } from '../lib/api';
 
 export const Home: React.FC = () => {
   const { header, hero, locator, awareness, chatbot, footer } = arMessages;
 
   const [selectedGov, setSelectedGov] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState<string>('');
   const [selectedCenter, setSelectedCenter] = useState({
     name: locator.defaultSelectedName,
     desc: locator.defaultSelectedDesc,
   });
 
-  const filteredCenters = CENTERS_DATA.filter((center) => {
-    const matchesGov = selectedGov === 'all' || center.gov === selectedGov;
-    const matchesSearch =
-      !searchQuery.trim() ||
-      center.name.includes(searchQuery.trim()) ||
-      center.address.includes(searchQuery.trim());
-    return matchesGov && matchesSearch;
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery.trim());
+    }, 300);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const centersQuery = useQuery({
+    queryKey: ['public-centers', selectedGov, debouncedSearchQuery],
+    queryFn: ({ signal }) =>
+      getCenters(
+        { governorate: selectedGov, search: debouncedSearchQuery },
+        signal,
+      ),
   });
+  const articlesQuery = useQuery({
+    queryKey: ['published-articles'],
+    queryFn: ({ signal }) => getPublishedArticles(signal),
+  });
+
+  const centers = centersQuery.data ?? [];
+  const articles = articlesQuery.data ?? [];
 
   const handleFocusOnMap = (name: string, lat: number, lng: number) => {
     setSelectedCenter({
@@ -199,7 +198,22 @@ export const Home: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
                 {/* Centers List (5 cols) */}
                 <div className="lg:col-span-5 flex flex-col gap-space-md max-h-[720px] overflow-y-auto pr-1">
-                  {filteredCenters.map((center) => (
+                  {centersQuery.isLoading && (
+                    <p className="rounded-xl bg-surface-container-lowest p-space-md text-secondary">
+                      {locator.loading}
+                    </p>
+                  )}
+                  {centersQuery.isError && (
+                    <p role="alert" className="rounded-xl bg-red-50 p-space-md text-red-800">
+                      {locator.error}
+                    </p>
+                  )}
+                  {!centersQuery.isLoading && !centersQuery.isError && centers.length === 0 && (
+                    <p className="rounded-xl bg-surface-container-lowest p-space-md text-secondary">
+                      {locator.empty}
+                    </p>
+                  )}
+                  {centers.map((center) => (
                     <div
                       key={center.id}
                       className="bg-surface-container-lowest p-space-md rounded-xl shadow-sm hover:shadow-md transition-all flex flex-col gap-space-xs"
@@ -334,7 +348,22 @@ export const Home: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
-                {ARTICLES_DATA.map((article) => (
+                {articlesQuery.isLoading && (
+                  <p className="md:col-span-3 rounded-xl bg-surface-container-lowest p-space-md text-secondary">
+                    {awareness.loading}
+                  </p>
+                )}
+                {articlesQuery.isError && (
+                  <p role="alert" className="md:col-span-3 rounded-xl bg-red-50 p-space-md text-red-800">
+                    {awareness.error}
+                  </p>
+                )}
+                {!articlesQuery.isLoading && !articlesQuery.isError && articles.length === 0 && (
+                  <p className="md:col-span-3 rounded-xl bg-surface-container-lowest p-space-md text-secondary">
+                    {awareness.empty}
+                  </p>
+                )}
+                {articles.map((article) => (
                   <article
                     key={article.id}
                     className="bg-surface-container-lowest rounded-xl shadow-sm p-space-md flex flex-col justify-between gap-space-md"

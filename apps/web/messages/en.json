@@ -16,6 +16,9 @@
     "lockoutTitle": "Security Notice: 2 attempts remaining",
     "lockoutMessage": "Workstations temporarily lock for 15 minutes after 5 consecutive failed attempts. Contact facility supervisor or IT desk to reset early.",
     "signInButton": "Sign In",
+    "signingIn": "Signing in…",
+    "signInError": "Unable to sign in. Check your credentials and try again.",
+    "signInSuccess": "Signed in successfully.",
     "enterKeyHint": "Enter",
     "donorPrompt": "Are you a voluntary donor?",
     "donorPortalLink": "Go to the public portal & center locator →"
