@@ -1,0 +1,23 @@
+{
+  "common": {
+    "brandName": "BloodNet",
+    "serviceSubtitle": "National Blood Transfusion Services",
+    "logoAlt": "BloodNet Logo",
+    "ministryEmblemAlt": "Ministry of Health and Population Emblem"
+  },
+  "auth": {
+    "portalSubtitle": "Clinical Staff & Medical Portal",
+    "emailLabel": "Institutional Email",
+    "emailPlaceholder": "staff.name@bloodnet.gov.eg",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter workstation password",
+    "togglePasswordAria": "Toggle password visibility",
+    "togglePasswordTitle": "Toggle visibility to prevent fatigue-induced input errors",
+    "lockoutTitle": "Security Notice: 2 attempts remaining",
+    "lockoutMessage": "Workstations temporarily lock for 15 minutes after 5 consecutive failed attempts. Contact facility supervisor or IT desk to reset early.",
+    "signInButton": "Sign In",
+    "enterKeyHint": "Enter",
+    "donorPrompt": "Are you a voluntary donor?",
+    "donorPortalLink": "Go to the public portal & center locator →"
+  }
+}
