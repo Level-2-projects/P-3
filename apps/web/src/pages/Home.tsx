@@ -223,7 +223,7 @@ export const Home: React.FC = () => {
                         <span
                           className={`inline-flex items-center gap-1 ${
                             center.isEmergency ? 'text-primary font-bold' : ''
-                          }`}
+                            }`}
                         >
                           <span className="material-symbols-outlined text-[16px]">schedule</span>{' '}
                           {center.schedule}
